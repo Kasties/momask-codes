@@ -3,8 +3,10 @@ import jax.numpy as jnp
 from flax import nnx
 from einops import rearrange
 
-#from models.vq.resnet_jax import Resnet1D
-from resnet_jax import Resnet1D
+try:
+    from models.vq.resnet_jax import Resnet1D
+except ImportError:
+    from resnet_jax import Resnet1D
 
 
 def get_activation(name):

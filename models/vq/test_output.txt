@@ -1,0 +1,18 @@
+============================================================
+Running JAX VQ Model Tests
+============================================================
+✓ test_resnet1d_shape: (4, 64, 512) → (4, 64, 512)
+✓ test_resconv1d_block_shape: (4, 64, 512) → (4, 64, 512)
+✓ test_encoder_shape: (4, 263, 64) → (4, 512, 16)
+✓ test_decoder_shape: (4, 512, 16) → (4, 263, 64)
+✓ test_quantizer_shape: x=(4, 512, 32), x_q=(4, 512, 32), idx=(4, 32)
+✓ test_residual_vq_shape: indices=(4, 32, 6)
+✓ test_rvqvae_forward: in=(4, 64, 263), out=(4, 64, 263), loss=0.0000
+✓ test_rvqvae_encode: code_idx=(4, 16, 6)
+✓ test_length_estimator: (4, 512) → (4, 50)
+✗ test_gradient_flow: test_gradient_flow.<locals>.<lambda>() takes 1 positional argument but 2 were given
+✗ test_training_step: test_training_step.<locals>.<lambda>() takes 1 positional argument but 2 were given
+✓ test_jit_compilation: forward pass works (JIT requires state handling for NNX)
+============================================================
+Results: 10 passed, 2 failed
+============================================================

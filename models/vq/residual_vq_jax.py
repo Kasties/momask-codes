@@ -180,6 +180,39 @@ class ResidualVQ(nnx.Module):
 
         return quantized_out, all_indices, avg_loss, avg_perp
 
+    def quantize(self, x, return_latent=False):
+        """Encode-only quantization without training updates.
+        
+        Args:
+            x: Input tensor of shape (N, C, T)
+            return_latent: If True, also return all quantized codes
+            
+        Returns:
+            code_idx: Indices of shape (N, T, num_quantizers)
+            all_codes: (optional) Quantized codes of shape (num_quantizers, N, C, T)
+        """
+        all_indices = []
+        quantized_out = jnp.zeros_like(x)
+        residual = x
+        all_codes = []
+        
+        for quantizer_index, layer in enumerate(self.layers):
+            # Quantize without training updates
+            quantized, indices, loss, perplexity = layer(residual, training=False, return_idx=True)
+            
+            residual = residual - jax.lax.stop_gradient(quantized)
+            quantized_out = quantized_out + quantized
+            
+            all_indices.append(indices)
+            all_codes.append(quantized)
+        
+        code_idx = jnp.stack(all_indices, axis=-1)
+        all_codes = jnp.stack(all_codes, axis=0)
+        
+        if return_latent:
+            return code_idx, all_codes
+        return code_idx
+
 # --- Test ---
 #rngs = nnx.Rngs(0)
 #rvq = ResidualVQ(num_quantizers=6, nb_code=512, code_dim=64, rngs=rngs)

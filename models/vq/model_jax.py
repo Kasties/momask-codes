@@ -3,10 +3,13 @@ import random
 import jax
 import jax.numpy as jnp
 from flax import nnx
-#from models.vq.encdec_jax import Encoder, Decoder
-#from models.vq.residual_vq_jax import ResidualVQ
-from encdec_jax import Encoder, Decoder
-from residual_vq_jax import ResidualVQ
+try:
+    from models.vq.encdec_jax import Encoder, Decoder
+    from models.vq.residual_vq_jax import ResidualVQ
+except ImportError:
+    from encdec_jax import Encoder, Decoder
+    from residual_vq_jax import ResidualVQ
+
 class RVQVAE(nnx.Module):
     def __init__(self,
                  args,
@@ -83,7 +86,7 @@ class RVQVAE(nnx.Module):
     def forward_decoder(self, x):
         x_d = self.quantizer.get_codes_from_indices(x)
         # x_d = x_d.view(1, -1, self.code_dim).permute(0, 2, 1).contiguous()
-        x = x_d.sum(dim=0).permute(0, 2, 1)
+        x = x_d.sum(axis=0).transpose(0, 2, 1)
 
         # decoder
         x_out = self.decoder(x)
@@ -119,44 +122,44 @@ class LengthEstimator(nnx.Module):
     def __call__(self, text_emb):
         return self.output(text_emb)
 
+if __name__ == "__main__":
+    import jax.numpy as jnp
+    import numpy as np
+    from types import SimpleNamespace
 
-import jax.numpy as jnp
-import numpy as np
-from types import SimpleNamespace
+    # Create args namespace with required parameters
+    args = SimpleNamespace(
+        num_quantizers=6,
+        shared_codebook=True,
+        quantize_dropout_prob=0.2,
+    )
 
-# Create args namespace with required parameters
-args = SimpleNamespace(
-    num_quantizers=6,
-    shared_codebook=True,
-    quantize_dropout_prob=0.2,
-)
+    # Create RNG key for model initialization
+    rngs = nnx.Rngs(0)
 
-# Create RNG key for model initialization
-rngs = nnx.Rngs(0)
+    # Load same random input
+    np_input = np.random.randn(4, 64, 263).astype(np.float32)
 
-# Load same random input
-np_input = np.random.randn(4, 64, 263).astype(np.float32)
+    # JAX forward  
+    jax_model = RVQVAE(
+        args=args,
+        input_width=263,
+        nb_code=1024,
+        code_dim=512,
+        output_emb_width=512,
+        down_t=2,
+        stride_t=2,
+        width=512,
+        depth=3,
+        dilation_growth_rate=3,
+        activation='relu',
+        norm=None,
+        rngs=rngs
+    )
+    jax_out, commit_loss, perplexity = jax_model(jnp.array(np_input))
 
-# JAX forward  
-jax_model = RVQVAE(
-    args=args,
-    input_width=263,
-    nb_code=1024,
-    code_dim=512,
-    output_emb_width=512,
-    down_t=2,
-    stride_t=2,
-    width=512,
-    depth=3,
-    dilation_growth_rate=3,
-    activation='relu',
-    norm=None,
-    rngs=rngs
-)
-jax_out, commit_loss, perplexity = jax_model(jnp.array(np_input))
-
-print(f"Input shape: {np_input.shape}")
-print(f"Output shape: {jax_out.shape}")
-print(f"Commit loss: {commit_loss}")
-print(f"Perplexity: {perplexity}")
-print("✓ Full model forward pass successful!")
+    print(f"Input shape: {np_input.shape}")
+    print(f"Output shape: {jax_out.shape}")
+    print(f"Commit loss: {commit_loss}")
+    print(f"Perplexity: {perplexity}")
+    print("✓ Full model forward pass successful!")
