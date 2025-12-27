@@ -274,7 +274,7 @@ def main():
         optax.adamw(learning_rate=lr_schedule, weight_decay=opt.weight_decay)
     )
     
-    optimizer = nnx.Optimizer(model, tx)
+    optimizer = nnx.Optimizer(model, tx, wrt=nnx.Param)
     
     # Training loop
     print("\nStarting training...")
