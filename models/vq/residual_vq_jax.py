@@ -114,9 +114,9 @@ class ResidualVQ(nnx.Module):
 
         if shared_codebook:
             layer = QuantizeEMAReset(nb_code, code_dim, mu, rngs=rngs)
-            self.layers = [layer for _ in range(num_quantizers)]
+            self.layers = nnx.List([layer for _ in range(num_quantizers)])
         else:
-            self.layers = [QuantizeEMAReset(nb_code, code_dim, mu, rngs=rngs) for _ in range(num_quantizers)]
+            self.layers = nnx.List([QuantizeEMAReset(nb_code, code_dim, mu, rngs=rngs) for _ in range(num_quantizers)])
 
     @property
     def codebooks(self):
